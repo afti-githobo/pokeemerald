@@ -1097,8 +1097,8 @@
       "map_section": "MAPSEC_KANTO_SAFARI_ZONE",
       "name": "SAFARI ZONE",
       "name_clone": true,
-      "x": 0,
-      "y": 0,
+      "x": 16,
+      "y": 2,
       "width": 1,
       "height": 1
     },

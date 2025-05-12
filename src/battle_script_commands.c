@@ -51,6 +51,7 @@
 #include "constants/rgb.h"
 #include "constants/songs.h"
 #include "constants/trainers.h"
+#include "constants/region_map_sections.h"
 
 extern const u8 *const gBattleScriptsForMoveEffects[];
 
@@ -10077,6 +10078,57 @@ static void Cmd_handleballthrow(void)
 
 static void Cmd_givecaughtmon(void)
 {
+    // fake the origin version for pokemon that can't be from emerald
+    const u8 rubySpeciesLen = 5;
+    const u8 sapphireSpeciesLen = 1;
+    const u8 leafGreenSpeciesLen = 17;
+    const u16 speciesRs[] = {SPECIES_ZANGOOSE, SPECIES_MEDITITE, SPECIES_MEDICHAM, SPECIES_DUSCLOPS, SPECIES_ROSELIA, SPECIES_LUNATONE};
+    const u16 speciesLeafGreen[] = {SPECIES_NIDORAN_F, SPECIES_SANDSHREW, SPECIES_SANDSLASH, SPECIES_VULPIX, SPECIES_BELLSPROUT, SPECIES_WEEPINBELL, SPECIES_SLOWPOKE, SPECIES_SLOWBRO,
+        SPECIES_STARYU, SPECIES_MAGMAR, SPECIES_PINSIR, SPECIES_MARILL, SPECIES_AZUMARILL, SPECIES_MISDREAVUS, SPECIES_SNEASEL, SPECIES_REMORAID, SPECIES_OCTILLERY,
+        SPECIES_MANTINE};
+    u8 i;
+    u8 arg[1];
+	bool8 isInKanto;
+
+    arg[0] = VERSION_EMERALD;
+    
+    isInKanto = gMapHeader.regionMapSectionId >= KANTO_MAPSEC_START && gMapHeader.regionMapSectionId <= KANTO_MAPSEC_END;
+    gBattleResults.caughtMonSpecies = GetMonData(&gEnemyParty[gBattlerPartyIndexes[BATTLE_OPPOSITE(gBattlerAttacker)]], MON_DATA_SPECIES, NULL);
+    
+    if (isInKanto)
+    {
+        arg[0] = VERSION_FIRE_RED;
+        for (i = 0; i < leafGreenSpeciesLen; i++)
+        {
+            if (gBattleResults.caughtMonSpecies == speciesLeafGreen[i])
+            {
+                arg[0] = VERSION_LEAF_GREEN;
+                break;
+            }
+        }
+    }
+    else
+    {
+        for (i = 0; i < rubySpeciesLen + sapphireSpeciesLen; i++) 
+        {
+            if (gBattleResults.caughtMonSpecies == speciesRs[i]) 
+            {
+                if (i < rubySpeciesLen) 
+                {
+                    arg[0] = VERSION_RUBY;
+                    break;
+                }
+                else 
+                {
+                    arg[0] = VERSION_SAPPHIRE;
+                    break;
+                }
+            }
+        }
+    }
+    
+    SetMonData(&gEnemyParty[gBattlerPartyIndexes[BATTLE_OPPOSITE(gBattlerAttacker)]], MON_DATA_MET_GAME, arg);
+    
     if (GiveMonToPlayer(&gEnemyParty[gBattlerPartyIndexes[BATTLE_OPPOSITE(gBattlerAttacker)]]) != MON_GIVEN_TO_PARTY)
     {
         if (!ShouldShowBoxWasFullMessage())
@@ -10098,7 +10150,6 @@ static void Cmd_givecaughtmon(void)
             gBattleCommunication[MULTISTRING_CHOOSER]++;
     }
 
-    gBattleResults.caughtMonSpecies = GetMonData(&gEnemyParty[gBattlerPartyIndexes[BATTLE_OPPOSITE(gBattlerAttacker)]], MON_DATA_SPECIES, NULL);
     GetMonData(&gEnemyParty[gBattlerPartyIndexes[BATTLE_OPPOSITE(gBattlerAttacker)]], MON_DATA_NICKNAME, gBattleResults.caughtMonNick);
     gBattleResults.caughtMonBall = GetMonData(&gEnemyParty[gBattlerPartyIndexes[BATTLE_OPPOSITE(gBattlerAttacker)]], MON_DATA_POKEBALL, NULL);
 
